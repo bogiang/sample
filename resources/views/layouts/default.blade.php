@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Sample App</title>
+        <title>@yield('title', 'Sample')</title>
     </head>
     <body>
         @yield('content')
