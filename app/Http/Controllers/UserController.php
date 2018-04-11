@@ -9,14 +9,31 @@ use Auth;
 
 class UserController extends Controller
 {
+    public function __construct(){
+        $this->middleware('auth', [
+            'except' => ['show', 'create', 'store', 'index']
+        ]);
+
+        $this->middleware('guest', [
+            'only' => ['create']
+        ]);
+    }
+
+    public function index(){
+        $users = User::paginate(10);
+        return view('users.index', compact('users'));
+    }
+
     public function create(){
         return view('users.create');
     }
 
+    //欢迎也
     public function show(User $user){
         return view('users.show', compact('user'));
     }
 
+    //创建
     public function store(Request $request){
         $this->validate($request, [
             'name' => 'required|max:50',
@@ -32,6 +49,39 @@ class UserController extends Controller
         Auth::login($user);
         session()->flash('success', '欢饮，您将在这里开启新的旅程~');
         return redirect()->route('users.show', [$user]);
+    }
+
+    //编辑
+    public function edit(User $user){
+        $this->authorize('update', $user);
+        return view('users.edit', compact('user'));
+    }
+
+    //更新
+    public function update(User $user, Request $request){
+        $this->validate($request, [
+            'name' => 'required|max:5',
+            'password' => 'required|confirmed|min:6',
+        ]);
+
+        $this->authorize('update', $user);
+
+        $date = [];
+        $date['name'] = $request->name;
+        if ($request->password) {
+            $data['password'] = bcrypt($request->password);
+        }
+        $user->update($date);
+
+        return redirect()->route('users.show', $user->id);
+    }
+
+    //删除
+    public function destroy(User $user){
+        $this->authorize('destroy', $user);
+        $user->delete();
+        session()->flash('success', '成功删除用户！');
+        return back();
     }
 }
 ?>
